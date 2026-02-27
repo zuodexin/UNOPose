@@ -35,7 +35,7 @@ ycbv_objects = [
     {"obj_id": 21, "name": "foam_brick", "group": "block"},
 ]
 
-# python -m src.scripts.paper.group_ycbv_scores --eval_dir /path/to/your/runs
+# python -m core.unopose.scripts.group_ycbv_scores --eval_dir output/ycbv_first_cfg/archive/bop_19/inference_model_final/ycbv/resultPfoneref50_ycbv-test
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Calculate standard deviation of a list of numbers."
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         metric_name = metric["name"]
         error_sig = metric["error_sig"]
         score_paths = glob(
-            f"{eval_dir}/{metric_name}/{args.tag}/error={error_sig}*/scores*.json"
+            f"{eval_dir}/error={error_sig}*/scores*.json"
         )
         for score_path in score_paths:
             with open(score_path, "r") as f:
