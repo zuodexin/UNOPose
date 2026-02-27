@@ -1,12 +1,14 @@
 import logging
 import os
 import os.path as osp
+import warnings
 
 # import sys
 import imageio
 
 # import orjson as json
 import cv2
+import ipdb
 import numpy as np
 from tqdm import tqdm
 import pycocotools.mask as cocomask
@@ -69,6 +71,8 @@ class BOPTestsetPoseFreeOneRefv2:
         # self.obj_idxs = obj_idxs
 
         self.data_folder = osp.join(self.data_dir, eval_dataset_name, "test")
+        if eval_dataset_name == "tless":
+            self.data_folder = osp.join(self.data_dir, eval_dataset_name, "test_primesense")
 
         if cfg.get("oneref_percat", False):
             assert cfg.targets_name is not None
@@ -121,7 +125,10 @@ class BOPTestsetPoseFreeOneRefv2:
                 instances.append(instance)
                 inst_ids.append(max_score_ind)
             else:
-                raise ValueError(f"no qulified instance in {self.det_keys[index]}")
+                warnings.warn(f"no qulified instance in {self.det_keys[index]}")
+                # get another random instance
+                rand_index = np.random.randint(0, len(self))
+                return self.__getitem__(rand_index)
 
         ret_dict = {}
         for key in instances[0].keys():

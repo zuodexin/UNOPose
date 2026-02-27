@@ -1,5 +1,6 @@
 # instance-level
 from .lm import lm
+from .tless import tless
 from .lmo import lmo
 from .ycbv import ycbv
 from .hb import hb

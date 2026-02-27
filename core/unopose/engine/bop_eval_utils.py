@@ -42,7 +42,9 @@ def save_and_eval_results(val_cfg, results_all, output_dir, obj_ids=None, exp_id
     result_names = []
     for name, result_list in results_all.items():
         method_name = f"{exp_id.replace('_', '-')}-{name}"
-        result_name = f"{method_name}_{val_cfg.dataset_name}-{val_cfg.split}{split_type_str}.csv"
+        result_name = (
+            f"{method_name}_{val_cfg.dataset_name}-{val_cfg.split}{split_type_str}.csv"
+        )
         res_path = osp.join(save_root, result_name)
         result_names.append(result_name)
         with open(res_path, "w") as f:
@@ -93,11 +95,15 @@ def eval_cached_results(val_cfg, output_dir, obj_ids=None, exp_id="", n_iter_tes
     # print('exp_id', exp_id)
     for name in names:
         method_name = "{}-{}".format(exp_id.replace("_", "-"), name)
-        result_name = f"{method_name}_{val_cfg.dataset_name}-{val_cfg.split}{split_type_str}.csv"
+        result_name = (
+            f"{method_name}_{val_cfg.dataset_name}-{val_cfg.split}{split_type_str}.csv"
+        )
         res_path = osp.join(save_root, result_name)
         if not osp.exists(res_path):
             if exp_id.endswith("_test"):
-                method_name = "{}-{}".format(exp_id.replace("_test", "").replace("_", "-"), name)
+                method_name = "{}-{}".format(
+                    exp_id.replace("_test", "").replace("_", "-"), name
+                )
                 result_name = f"{method_name}_{val_cfg.dataset_name}-{val_cfg.split}{split_type_str}.csv"
                 res_path = osp.join(save_root, result_name)
         assert osp.exists(res_path), res_path
@@ -144,7 +150,7 @@ def eval_cached_results(val_cfg, output_dir, obj_ids=None, exp_id="", n_iter_tes
 
 def get_data_ref(dataset_name):
     ref_key_dict = {
-        "lm": "lm_full",
+        "lm": "lm",
         "lmo": "lmo",
         "lmo_full": "lmo",
         "ycbv": "ycbv",
@@ -161,7 +167,12 @@ def get_thr(score_path):
     # scores_th:2.000_min-visib:0.100.json
     # rete: scores_th:10.000-10.000_min-visib:-1.000.json
     # NOTE: assume the same threshold (currently can deal with rete, rete_s)
-    return float(score_path.split("/")[-1].replace(f"scores_th{SPLIT_STR}", "").split("_")[0].split("-")[0])
+    return float(
+        score_path.split("/")[-1]
+        .replace(f"scores_th{SPLIT_STR}", "")
+        .split("_")[0]
+        .split("-")[0]
+    )
 
 
 def simplify_float_str(float_str):
@@ -212,7 +223,9 @@ def get_object_nums_from_targets(targets_path):
         if obj_id not in obj_nums_dict:
             obj_nums_dict[obj_id] = 0
         obj_nums_dict[obj_id] += target["inst_count"]
-    res_obj_nums_dict = {str(key): obj_nums_dict[key] for key in sorted(obj_nums_dict.keys())}
+    res_obj_nums_dict = {
+        str(key): obj_nums_dict[key] for key in sorted(obj_nums_dict.keys())
+    }
     return res_obj_nums_dict
 
 
@@ -266,15 +279,23 @@ def summary_scores(
         # mean of selected objs
         num_objs = len(sel_obj_ids)
         if num_objs > 1:
-            sel_obj_recalls = [_recall for _id, _recall in score_dict["obj_recalls"].items() if int(_id) in sel_obj_ids]
+            sel_obj_recalls = [
+                _recall
+                for _id, _recall in score_dict["obj_recalls"].items()
+                if int(_id) in sel_obj_ids
+            ]
             if not is_weighted_average_metric(error_type):
                 mean_obj_recall = np.mean(sel_obj_recalls)
             else:
                 assert obj_nums_dict is not None
-                sel_obj_nums = np.array([_v for _k, _v in obj_nums_dict.items() if int(_k) in sel_obj_ids])
+                sel_obj_nums = np.array(
+                    [_v for _k, _v in obj_nums_dict.items() if int(_k) in sel_obj_ids]
+                )
                 sel_obj_weights = sel_obj_nums / sum(sel_obj_nums)
                 mean_obj_recall = sum(sel_obj_weights * np.array(sel_obj_recalls))
-            cur_tab_col2.append(["Avg({})".format(num_objs), f"{mean_obj_recall * 100:.2f}"])
+            cur_tab_col2.append(
+                ["Avg({})".format(num_objs), f"{mean_obj_recall * 100:.2f}"]
+            )
 
         cur_tab_col2 = np.array(cur_tab_col2)
         tabs_col2.append(cur_tab_col2)
@@ -303,12 +324,16 @@ def summary_scores(
                         obj_nums.append(obj_nums_dict[str(data_ref.obj2id[obj_name])])
                     res_tab.append([obj_name, f"{cur_auc * 100:.2f}"])
             if is_weighted_average_metric(error_type):
-                assert len(obj_nums) == len(obj_aucs), f"{len(obj_nums)} != {len(obj_aucs)}"
+                assert len(obj_nums) == len(
+                    obj_aucs
+                ), f"{len(obj_nums)} != {len(obj_aucs)}"
                 obj_weights = np.array(obj_nums) / sum(obj_nums)
                 mean_obj_auc = sum(np.array(obj_aucs) * obj_weights)
             else:
                 mean_obj_auc = np.mean(obj_aucs)
-            res_tab.append(["Avg({})".format(len(obj_aucs)), f"{mean_obj_auc * 100:.2f}"])
+            res_tab.append(
+                ["Avg({})".format(len(obj_aucs)), f"{mean_obj_auc * 100:.2f}"]
+            )
             res_tab = np.array(res_tab)
         return res_tab
 
@@ -316,7 +341,11 @@ def summary_scores(
 def maybe_average_vsd_scores(res_log_tab):
     # obj in row, scores in col
     if "vsd_0.050:0.500" in res_log_tab[:, 0]:
-        vsd_rows = [_r for _r in range(res_log_tab.shape[0]) if res_log_tab[_r, 0] == "vsd_0.050:0.500"]
+        vsd_rows = [
+            _r
+            for _r in range(res_log_tab.shape[0])
+            if res_log_tab[_r, 0] == "vsd_0.050:0.500"
+        ]
         vsd_mean = np.mean(res_log_tab[vsd_rows, 1:].astype("float32"), 0)
         vsd_mean_row = np.array(
             ["vsd_0.050:0.500"] + [f"{_v:.2f}" for _v in vsd_mean],
@@ -366,7 +395,9 @@ def load_and_print_val_scores_tab(
     data_ref = get_data_ref(val_dataset_name)
 
     if any(is_weighted_average_metric(err_type) for err_type in error_types):
-        obj_nums_dict = get_object_nums_from_targets(osp.join(data_ref.dataset_root, val_cfg.targets_filename))
+        obj_nums_dict = get_object_nums_from_targets(
+            osp.join(data_ref.dataset_root, val_cfg.targets_filename)
+        )
     else:
         obj_nums_dict = None
 
@@ -374,19 +405,26 @@ def load_and_print_val_scores_tab(
     # visib_gt_min = 0.1
 
     for result_name in tqdm(result_names):
-        logger.info("=====================================================================")
+        logger.info(
+            "====================================================================="
+        )
         big_tab_row = []
         for error_type in error_types:
             result_name = result_name.replace(".csv", "")
             # logger.info(f"************{result_name} *** [{error_type}]*******************")
             if error_type == "vsd":
                 error_signs = [
-                    misc.get_error_signature(error_type, ntop, vsd_delta=vsd_delta, vsd_tau=vsd_tau)
+                    misc.get_error_signature(
+                        error_type, ntop, vsd_delta=vsd_delta, vsd_tau=vsd_tau
+                    )
                     for vsd_tau in vsd_taus
                 ]
             else:
                 error_signs = [misc.get_error_signature(error_type, ntop)]
-            score_roots = [osp.join(eval_root, result_name, error_sign) for error_sign in error_signs]
+            score_roots = [
+                osp.join(eval_root, result_name, error_sign)
+                for error_sign in error_signs
+            ]
 
             for score_root in score_roots:
                 if osp.exists(score_root):
@@ -435,14 +473,18 @@ def load_and_print_val_scores_tab(
             new_res_log_tab = maybe_average_vsd_scores(res_log_tab)
             new_res_log_tab_col = new_res_log_tab.T
 
-            if len(new_res_log_tab) < len(new_res_log_tab_col):  # print the table with more rows later
+            if len(new_res_log_tab) < len(
+                new_res_log_tab_col
+            ):  # print the table with more rows later
                 log_tabs = [new_res_log_tab, new_res_log_tab_col]
                 suffixes = ["row", "col"]
             else:
                 log_tabs = [new_res_log_tab_col, new_res_log_tab]
                 suffixes = ["col", "row"]
             for log_tab_i, suffix in zip(log_tabs, suffixes):
-                dump_tab_name = osp.join(eval_root, f"{result_name}_tab_obj_{suffix}.txt")
+                dump_tab_name = osp.join(
+                    eval_root, f"{result_name}_tab_obj_{suffix}.txt"
+                )
                 log_tab_i_str = tabulate(
                     log_tab_i,
                     tablefmt="plain",
@@ -470,7 +512,9 @@ if __name__ == "__main__":
         --result_names result_ycbv-test.csv \
         --result_dir output/unopose/base/inference_model_final/ycbv/
     """
-    parser = argparse.ArgumentParser(description="wrapper functions to evaluate with bop toolkit")
+    parser = argparse.ArgumentParser(
+        description="wrapper functions to evaluate with bop toolkit"
+    )
     parser.add_argument(
         "--script-path",
         default="third_party/bop_toolkit/scripts/eval_bop19_pose.py",
@@ -479,7 +523,9 @@ if __name__ == "__main__":
 
     parser.add_argument("--result_dir", default="", help="result dir")
     # f"{method_name}_{val_cfg.DATASET_NAME}-{val_cfg.SPLIT}{split_type_str}_{other}-{description}.csv"
-    parser.add_argument("--result_names", default="", help="result names: a.csv,b.csv,c.csv")
+    parser.add_argument(
+        "--result_names", default="", help="result names: a.csv,b.csv,c.csv"
+    )
 
     parser.add_argument("--dataset", default="lmo", help="dataset name")
     parser.add_argument("--split", default="test", help="split")
@@ -500,9 +546,15 @@ if __name__ == "__main__":
     )
     # parser.add_argument("--error_types", default="ad,reteS,reS,teS,projS", help="error types")
     parser.add_argument("--error_types", default="ad,re,te,proj", help="error types")
-    parser.add_argument("--render_type", default="vispy", help="render type: python | cpp | vispy")
-    parser.add_argument("--score_only", default=False, action="store_true", help="score only")
-    parser.add_argument("--print_only", default=False, action="store_true", help="print only")
+    parser.add_argument(
+        "--render_type", default="vispy", help="render type: python | cpp | vispy"
+    )
+    parser.add_argument(
+        "--score_only", default=False, action="store_true", help="score only"
+    )
+    parser.add_argument(
+        "--print_only", default=False, action="store_true", help="print only"
+    )
     parser.add_argument(
         "opts",
         help="""
