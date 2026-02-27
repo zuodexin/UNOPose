@@ -48,6 +48,9 @@ p = {
         "ad": [0.1],
         "add": [0.1],
         "adi": [0.1],
+        "AUCad": [10],  # max distance 10cm
+        "AUCadd": [10],  # max distance 10cm
+        "AUCadi": [10],  # max distance 10cm
     },
     # Pose errors that will be normalized by object diameter before thresholding.
     "normalized_by_diameter": ["ad", "add", "adi", "mssd"],

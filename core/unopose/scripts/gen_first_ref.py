@@ -6,6 +6,7 @@ import ipdb
 from matplotlib import pyplot as plt
 import skimage
 from tqdm import tqdm
+import os.path as osp
 from bop_toolkit_lib import inout
 
 
@@ -22,6 +23,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="lm")
     parser.add_argument("--split", type=str, default="test")
     parser.add_argument("--split_type", type=str, default="none")
+    parser.add_argument("--bop19_test", action="store_true")
 
     args = parser.parse_args()
     bop_root = args.bop_root
@@ -35,7 +37,12 @@ if __name__ == "__main__":
 
     scene_ids = get_present_scene_ids(dp_split)
     obj_ids = dp_eval_model["obj_ids"]
-
+    
+    if args.bop19_test:
+        test_target = inout.load_json(osp.join(dp_split["base_path"], "test_targets_bop19.json"))
+        valid_target = {}
+        for item in test_target:
+            valid_target.setdefault(item["scene_id"],{}).setdefault(item["im_id"], {}).setdefault(item["obj_id"], 1)
     ref_targets = []
 
     first_view = {}
@@ -60,6 +67,9 @@ if __name__ == "__main__":
                     ref_im_id=first_view[(obj_id, scene_id)],
                     ref_scene_id=scene_id,
                 )
+                if args.bop19_test:
+                    if not valid_target.get(scene_id, {}).get(im_id, {}).get(obj_id, {}):
+                        continue
                 ref_targets.append(ref_target)
     save_path = os.path.join(
         args.bop_root,

@@ -75,7 +75,7 @@ def do_save_results(cfg, model, iteration=None):
         python {PROJ_DIR}/core/unopose/engine/bop_eval_utils.py \
         --script-path third_party/bop_toolkit/scripts/eval_pose_results_more.py \
         --targets_name test_targets_bop19.json \
-        --error_types 'vsd,mssd,mspd' \
+        --error_types 'vsd,mssd,mspd,ad,rete,AUCadd,AUCadi,AUCad' \
         --split test \
         --dataset {dataset_name} \
         --result_names {save_name} \
